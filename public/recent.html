@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>spotify api</title>
+  <style type="text/css">
+  	body {
+  		background-color: beige;
+  	}
+  </style>
+</head>
+<body>
+  <h1 id="data-heading">Data from Third-Party API</h1>
+  <ul id="data-list"></ul>
+
+  <script>
+    // Fetch data from Express.js server
+    fetch('/get-recent')
+      .then(response => response.json())
+      .then(data => {
+        const dataList = document.getElementById('data-list');
+        const dataHeading = document.getElementById('data-heading');
+
+        // Update HTML content with retrieved data
+        data.forEach(item => {
+
+          var track = item.track;
+
+          const listItem = document.createElement('li');
+          listItem.textContent = track.name;
+          dataList.appendChild(listItem);
+
+          const artistList = document.createElement('ul');
+
+
+          const artistItem = document.createElement('li');
+          artistItem.textContent = track.artists[0].name;
+          artistList.appendChild(artistItem);
+
+          dataList.appendChild(artistList);
+        });
+
+        // Update heading if data is empty
+        if (data.length === 0) {
+          dataHeading.textContent = 'No data available';
+        }
+      })
+      .catch(error => console.error(error));
+      
+  </script>
+</body>
+</html>

@@ -65,9 +65,11 @@ app.get('/get-recent', function(req, res) {
         for(var i = 0; i< history.length; i++) {
           console.log(history[i].track.name)
         }
+
+        res.json(history);
       });
 
-      res.redirect('/');
+      // res.redirect('/recent.html');
 
     } else {
       res.redirect('/#' +
