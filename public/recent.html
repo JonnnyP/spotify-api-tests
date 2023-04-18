@@ -9,7 +9,8 @@
   </style>
 </head>
 <body>
-  <h1 id="data-heading">Data from Third-Party API</h1>
+  <a href="/login" >Login</a>
+  <h1 id="data-heading">Recently Played Songs</h1>
   <ul id="data-list"></ul>
 
   <script>
@@ -20,10 +21,13 @@
         const dataList = document.getElementById('data-list');
         const dataHeading = document.getElementById('data-heading');
 
+        // console.log(data);
+
         // Update HTML content with retrieved data
         data.forEach(item => {
 
           var track = item.track;
+          var timePlayed = item.played_at
 
           const listItem = document.createElement('li');
           listItem.textContent = track.name;
@@ -31,10 +35,15 @@
 
           const artistList = document.createElement('ul');
 
-
           const artistItem = document.createElement('li');
           artistItem.textContent = track.artists[0].name;
+
+          const timePlayedItem = document.createElement('li');
+          timePlayedItem.textContent = timePlayed;
+
+
           artistList.appendChild(artistItem);
+          artistList.appendChild(timePlayedItem);
 
           dataList.appendChild(artistList);
         });

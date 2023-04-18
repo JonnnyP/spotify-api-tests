@@ -54,7 +54,7 @@ app.get('/get-recent', function(req, res) {
           refresh_token = body.refresh_token;
 
       var getRecentPlays = {
-        url: 'https://api.spotify.com/v1/me/player/recently-played',
+        url: 'https://api.spotify.com/v1/me/player/recently-played?limit=50',
         headers: { 'Authorization': 'Bearer ' + access_token },
         json: true
       };
@@ -62,14 +62,13 @@ app.get('/get-recent', function(req, res) {
       request.get(getRecentPlays, function(error, response, body) {
         var history = body.items;
 
-        for(var i = 0; i< history.length; i++) {
-          console.log(history[i].track.name)
-        }
+        console.log(body.items[0].played_at);
+        // for(var i = 0; i< history.length; i++) {
+        //   console.log(history[i].track.name)
+        // }
 
         res.json(history);
       });
-
-      // res.redirect('/recent.html');
 
     } else {
       res.redirect('/#' +
