@@ -73,12 +73,27 @@ app.get('/get-recent', function(req, res) {
       request.get(getRecentPlays, function(error, response, body) {
         var history = body.items;
 
-        console.log(body.items[0].played_at);
+        // console.log(body.items[0].played_at);
+
         // for(var i = 0; i< history.length; i++) {
         //   console.log(history[i].track.name)
         // }
 
+        // send spotify music history to client
         res.json(history);
+
+        // authenticate for drive api then request sheet data
+        authorize().then(getSpecificSheet).then(
+          function (result) {
+            console.log(result.data)
+          }
+        );
+
+        // identify last record added to sheet
+        // avoid overwriting previous data & easy to maintain
+
+        // append new spotify data to sheet
+
       });
 
     } else {
@@ -119,7 +134,7 @@ app.get('/callback', function(req, res) {
       json: true
     };
 
-    console.log("ready for api requests");
+    console.log("ready for spotify api requests");
   }
 
   res.redirect('/');
@@ -164,16 +179,22 @@ async function saveCredentials(client) {
 // drive api 
 async function authorize() {
   let client = await loadSavedCredentialsIfExist();
+  
   if (client) {
+    console.log('drive api client already exists');
     return client;
   }
+
   client = await authenticate({
     scopes: SCOPES,
     keyfilePath: CREDENTIALS_PATH,
   });
+  
   if (client.credentials) {
+    console.log('drive api credentials were stored')
     await saveCredentials(client);
   }
+
   return client;
 }
 
@@ -191,13 +212,9 @@ async function getSpecificSheet(authClient) {
   
   const numRows = result.data.values ? result.data.values.length : 0;
   
-  // console.log(`${numRows} rows retrieved.`);
-  console.log(result.data);
+  console.log(numRows + ' rows in sheet\n');  
   return result;
-
 }
 
-authorize().then(getSpecificSheet);
-
-// app.listen(8888);
-// console.log("Listening on 8888");
+app.listen(8888);
+console.log("Listening on 8888\n");
