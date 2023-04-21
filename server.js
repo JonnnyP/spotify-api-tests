@@ -178,25 +178,26 @@ async function authorize() {
 }
 
 // drive api
-async function listFiles(authClient) {
-  const drive = google.drive({version: 'v3', auth: authClient});
-  const res = await drive.files.list({
-    pageSize: 10,
-    fields: 'nextPageToken, files(id, name)',
-  });
-  const files = res.data.files;
-  if (files.length === 0) {
-    console.log('No files found.');
-    return;
-  }
+async function getSpecificSheet(authClient) {
+  var spreadsheetId = process.env.SPREADSHEET_ID;
+  var range = "Sheet1";
 
-  console.log('Files:');
-  files.map((file) => {
-    console.log(`${file.name} (${file.id})`);
+  const service = google.sheets({version: 'v4', auth: authClient});
+
+  const result = await service.spreadsheets.values.get({
+    spreadsheetId,
+    range,
   });
+  
+  const numRows = result.data.values ? result.data.values.length : 0;
+  
+  // console.log(`${numRows} rows retrieved.`);
+  console.log(result.data);
+  return result;
+
 }
 
-authorize().then(listFiles).catch(console.error);
+authorize().then(getSpecificSheet);
 
 // app.listen(8888);
 // console.log("Listening on 8888");
