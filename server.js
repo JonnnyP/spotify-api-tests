@@ -5,33 +5,47 @@ const {authenticate} = require('@google-cloud/local-auth');
 const {google} = require('googleapis');
 const sheets = google.sheets('v4');
 
-var express = require('express');
-var request = require('request');
-var cors = require('cors');
-var querystring = require('querystring');
-var cookieParser = require('cookie-parser');
+const express = require('express');
+const session = require('express-session');
+const request = require('request');
+const cors = require('cors');
+const querystring = require('querystring');
+const cookieParser = require('cookie-parser');
 require('dotenv').config()
 
 const TOKEN_PATH = path.join(process.cwd(), 'token.json');
 const CREDENTIALS_PATH = path.join(process.cwd(), 'credentials.json');
 const SCOPES = ['https://www.googleapis.com/auth/drive'];
 
-var redirect_uri = 'http://localhost:8888/callback';
-var stateKey = 'spotify_auth_state';
+const redirect_uri = 'http://localhost:8888/callback';
+const stateKey = 'spotify_auth_state';
 
-var code = null;
-var state = null;
-
-var app = express();
+let oneDay = 1000 * 60 * 60 * 24;
+let app = express();
+let sess;
+let code = null;
 
 app.use(express.static(__dirname + '/public'))
-   .use(cors())
-   .use(cookieParser());
+  .use(express.json())
+  .use(express.urlencoded({ extended: true }))
+  .use(cors())
+  .use(cookieParser())
+  .use(session({
+    secret: generateRandomString(16),
+    resave: false,
+    saveUninitialized: true,
+    cookie: {
+      secure: true,
+      maxAge: oneDay,
+    }
+  }));
 
 app.get('/login', function(req, res) {
 
-  var state = generateRandomString(16);
-  var scope = 'user-read-recently-played user-read-currently-playing';
+  req.session.state = generateRandomString(16);
+  sess = req.session;
+
+  const scope = 'user-read-recently-played user-read-currently-playing';
 
   res.redirect('https://accounts.spotify.com/authorize?' +
     querystring.stringify({
@@ -39,7 +53,7 @@ app.get('/login', function(req, res) {
       client_id: process.env.CLIENT_ID,
       scope: scope,
       redirect_uri: redirect_uri,
-      state: state
+      state: req.session.state
     }));
 });
 
@@ -115,8 +129,11 @@ app.get('/get-recent', function(req, res) {
 
 app.get('/callback', function(req, res) {
 
+  const state = req.query.state;
+  const storedState = sess.state;
   code = req.query.code || null;
-  state = req.query.state || null;
+
+  if (state != storedState) return res.status(401).send("Invalid state");
 
   if (state === null) {
     res.redirect('/#' +
