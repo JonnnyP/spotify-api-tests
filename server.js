@@ -3,7 +3,6 @@ const path = require('path');
 const process = require('process');
 const {authenticate} = require('@google-cloud/local-auth');
 const {google} = require('googleapis');
-const sheets = google.sheets('v4');
 
 const express = require('express');
 const session = require('express-session');
@@ -25,6 +24,8 @@ let app = express();
 let sess;
 let code = null;
 
+const authClient = authorize();
+
 app.use(express.static(__dirname + '/public'))
   .use(express.json())
   .use(express.urlencoded({ extended: true }))
@@ -40,6 +41,7 @@ app.use(express.static(__dirname + '/public'))
     }
   }));
 
+// want to make it so that once the server starts up it authenticates google and spotify api
 app.get('/login', function(req, res) {
 
   req.session.state = generateRandomString(16);
@@ -104,10 +106,7 @@ app.get('/get-recent', function(req, res) {
         res.json(history);
 
         // authenticate for drive api
-        authorize(authClient => {
-
-          appendToSheet(authClient, data);
-        });
+        appendToSheet(authClient, data);
 
         // authorize().then(appendToSheet).then(
         //   function (result) {
@@ -242,6 +241,8 @@ async function getSpecificSheet(authClient) {
 // drive api
 async function appendToSheet(authClient, data) {
 
+  const service = google.sheets({version: 'v4', auth: authClient});
+
   const request = {
     spreadsheetId: process.env.SPREADSHEET_ID,
     range: "Sheet1",
@@ -251,10 +252,10 @@ async function appendToSheet(authClient, data) {
       "majorDimension": "ROWS",
       "values": data,
     },
-    auth: authClient,
+    // auth: authClient,
   }
 
-  const response = await sheets.spreadsheets.values.append(request);
+  const response = await service.spreadsheets.values.append(request);
 
   return response;
 }
